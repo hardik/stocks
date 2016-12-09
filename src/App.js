@@ -1,21 +1,86 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
+import React, {Component} from 'react';
+import PubNub from 'pubnub';
 import './App.css';
+import * as CONSTANTS from './constants';
+import LoadingScreen from './LoadingScreen';
+import Stocks from './Stocks';
 
 class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to React</h2>
-        </div>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-      </div>
-    );
-  }
+    constructor(props) {
+        super(props);
+        this.state = {
+            stocks: []
+        };
+    }
+
+    componentDidMount() {
+        this.pubnub = new PubNub({
+            publishKey: CONSTANTS.PUBNUB_KEYS.PUBLISH,
+            subscribeKey: CONSTANTS.PUBNUB_KEYS.SUBSCRIBE
+        });
+        this.subscribe();
+    }
+
+    /**
+     * Receives data stream and updates the state with stocks
+     *
+     */
+    subscribe = () => {
+        this.pubnub.subscribe({
+            channels: ['stocks']
+        });
+
+        // Subscribe to the channel
+        this.pubnub.addListener({
+            message: function (m) {
+                if(m.message && m.message.length) {
+                    let stocks = this.validateStocks(m.message); // Validated Payload
+
+                    this.setState({
+                        stocks: stocks
+                    });
+                }
+            }.bind(this)
+        });
+    };
+
+    /**
+     * Filter stocks to get rid of invalid values
+     * @param stocks
+     * @returns {Array}
+     */
+    validateStocks = (stocks) => {
+        let filteredStocks = [];
+
+        stocks.forEach(stock => {
+            if(stock[0] && stock[0].length && stock[1] && (!isNaN(parseFloat(stock[1])) && isFinite(stock[1])) ) {
+                filteredStocks.push(stock);
+            }
+        });
+
+        return filteredStocks;
+    };
+
+    render() {
+        let {stocks} = this.state;
+
+        if(stocks && stocks.length) {
+            return (
+                <div className="app container-fluid">
+                    <Stocks
+                        stocks={stocks}
+                    />
+                </div>
+            )
+        }
+        else {
+            return (
+                <div className="app container-fluid">
+                    <LoadingScreen/>
+                </div>
+            )
+        }
+    }
 }
 
 export default App;
