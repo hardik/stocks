@@ -4,7 +4,6 @@ import './App.css';
 import * as CONSTANTS from './constants';
 import LoadingScreen from './LoadingScreen';
 import Stocks from './Stocks';
-import Publish from './Publish';
 
 class App extends Component {
     constructor(props) {
@@ -71,7 +70,6 @@ class App extends Component {
                     <Stocks
                         stocks={stocks}
                     />
-                    <Publish publish/>
                 </div>
             )
         }
@@ -79,7 +77,6 @@ class App extends Component {
             return (
                 <div className="app container-fluid">
                     <LoadingScreen/>
-                    <Publish publish/>
                 </div>
             )
         }
